@@ -59,6 +59,7 @@ function create() {
 
   player = this.physics.add.sprite(240, 80, "dude"); //プレイヤー
   player.setBounce(0.2); // 少しバウンドする
+  player.setCollideWorldBounds(true); //画面外に移動できないように
 
   this.anims.create({
     key: "left",
