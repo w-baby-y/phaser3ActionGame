@@ -2,6 +2,7 @@ const D_WIDTH = 480;
 const D_HEIGHT = 320;
 let player; //プレイヤーのスプライトを格納
 let bomb;
+let bomb2;
 let score = 0;
 let scoreText;
 let gameOverText;
@@ -106,14 +107,15 @@ function create() {
   this.physics.add.collider(bombs, staticGroup); //ボムと地面の衝突処理
 
   //爆弾１個め
-  let bomb = bombs.create(16, 16, "bomb");
+  bomb = bombs.create(16, 16, "bomb");
   bomb.setBounce(1);
   bomb.setCollideWorldBounds(true);
   bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
   bomb.allowGravity = true;
 
   //爆弾２個め
-  let bomb2 = bombs.create(500, 16, "bomb");
+  //bomb2もローカル変数で宣言していたため挙動がおかしくなったので、修正
+  bomb2 = bombs.create(500, 16, "bomb");
   bomb2.setBounce(1);
   bomb2.setCollideWorldBounds(true);
   bomb2.setVelocity(Phaser.Math.Between(-200, 200), 20);
@@ -180,7 +182,7 @@ function collectCoin(player, coin) {
   coin.destroy();
   score += 10;
   scoreText.setText("Score: " + score);
-
+  console.log(score);
   if (score === 50) {
     //   jewelGroup.setVisible(true);
     let jewel = jewelGroup.create(450, 0, "jewel").setDisplaySize(30, 45); // ジュエル１
