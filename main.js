@@ -96,8 +96,8 @@ function create() {
   coinGroup.create(400, 0, "coin"); // コイン3
   this.physics.add.collider(coinGroup, staticGroup); //地面とコインの衝突処理
 
-  let jewelGroup = this.physics.add.group(); //ジュエルグループをまとめる
-  jewelGroup.create(450, 0, "jewel").setDisplaySize(30, 45); // ジュエル１
+  jewelGroup = this.physics.add.group(); //ジュエルグループをまとめる
+  //グローバル変数でjewelGroupを指定しているのに、改めてローカル関数内変数を定義したのでエラーになった
   // jewelGroup.setVisible(false);
   this.physics.add.collider(jewelGroup, staticGroup); //地面とコインの衝突処理
 
@@ -181,9 +181,14 @@ function collectCoin(player, coin) {
   score += 10;
   scoreText.setText("Score: " + score);
 
-  //   if (score === 50) {
-  //     //   jewelGroup.setVisible(true);
-  //   }
+  if (score === 50) {
+    //   jewelGroup.setVisible(true);
+    let jewel = jewelGroup.create(450, 0, "jewel").setDisplaySize(30, 45); // ジュエル１
+    // jewel.setBounce(1);
+    // jewel.setCollideWorldBounds(true);
+    // jewel.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    jewel.allowGravity = false;
+  }
 }
 
 // ゲーム画面の更新(キャラクターの操作等)
