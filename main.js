@@ -1,12 +1,14 @@
-const D_WIDTH = 480;
-const D_HEIGHT = 320;
+const D_WIDTH = 640;
+const D_HEIGHT = 480;
 let player; //プレイヤーのスプライトを格納
 let bomb;
-let bomb2;
 let score = 0;
 let scoreText;
 let gameOverText;
 let jewelGroup;
+let bombs;
+let staticGroup2;
+let deathCheck = 0;
 
 // 1, Phaser3の設定データ
 const config = {
@@ -27,7 +29,7 @@ const config = {
     default: "arcade",
     arcade: {
       debug: false, // スプライトに緑の枠を表示します
-      gravity: { y: 200 }, // 重力の方向とその強さ
+      gravity: { y: 150 }, // 重力の方向とその強さ
     },
   },
 };
@@ -42,10 +44,11 @@ function preload() {
   this.load.image("ground", "./assets/ground.png");
   this.load.image("pillar", "./assets/pillar.png");
   this.load.image("post", "./assets/post.png");
-  this.load.image("sky", "./assets/sky.png");
+  this.load.image("sky", "./assets/back.gif");
   this.load.image("coin", "./assets/coin.png");
   this.load.image("jewel", "./assets/jewel.png");
   this.load.image("bomb", "assets/bomb.png");
+  this.load.image("death", "assets/death.png");
   this.load.spritesheet("dude", "assets/dude.png", {
     //スプライトの指定
     frameWidth: 32,
@@ -55,9 +58,9 @@ function preload() {
 // ゲーム画面の初期化(キャラクターの登場等)
 function create() {
   console.log("create!!");
-  this.add.image(D_WIDTH / 2, D_HEIGHT / 2, "sky"); //背景画像
+  this.add.image(D_WIDTH / 2, D_HEIGHT / 2, "sky").setDisplaySize(640, 480); //背景画像
 
-  player = this.physics.add.sprite(240, 80, "dude"); //プレイヤー
+  player = this.physics.add.sprite(300, 160, "dude"); //プレイヤー
   player.setBounce(0.2); // 少しバウンドする
   player.setCollideWorldBounds(true); //画面外に移動できないように
 
@@ -82,13 +85,19 @@ function create() {
   });
 
   let staticGroup = this.physics.add.staticGroup(); //動かないグループをまとめる
-  staticGroup.create(D_WIDTH / 2, D_HEIGHT - 32, "ground"); //地面を作る
-  staticGroup.create(240, 240, "block"); // ブロック
+  staticGroup.create(D_WIDTH / 2 + 100, D_HEIGHT - 32, "ground"); //地面を作る
+  staticGroup.create(D_WIDTH / 2 - 100, D_HEIGHT - 32, "ground"); //地面を作る
+  staticGroup.create(280, 280, "block"); // ブロック
   staticGroup.create(120, 120, "block"); // ブロック
   staticGroup.create(300, 100, "block"); // ブロック
-  staticGroup.create(30, 230, "post"); // ポスト
-  staticGroup.create(450, 160, "pillar"); // 電柱
+  staticGroup.create(500, 100, "block"); // ブロック
+  staticGroup.create(50, 400, "block"); // ブロック
+  staticGroup.create(30, 250, "post"); // ポスト
+  staticGroup.create(550, 320, "pillar"); // 電柱
   this.physics.add.collider(player, staticGroup); //地面とプレイやーの衝突処理
+
+  staticGroup2 = this.physics.add.staticGroup(); //ドッキリブロックをつくる
+  staticGroup2.create(150, 320, "block"); // ブロック
 
   let coinGroup = this.physics.add.group(); //コイングループをまとめる
   coinGroup.create(10, 0, "coin"); // コイン1
@@ -96,6 +105,7 @@ function create() {
   coinGroup.create(200, 0, "coin"); // コイン2
   coinGroup.create(300, 0, "coin"); // コイン3
   coinGroup.create(400, 0, "coin"); // コイン3
+  coinGroup.create(500, 0, "coin"); // コイン3
   this.physics.add.collider(coinGroup, staticGroup); //地面とコインの衝突処理
 
   jewelGroup = this.physics.add.group(); //ジュエルグループをまとめる
@@ -104,9 +114,9 @@ function create() {
   this.physics.add.collider(jewelGroup, staticGroup); //地面とコインの衝突処理
 
   // 爆弾と衝突判定
-  let bombs = this.physics.add.group(); //bombグループをまとめる
+  bombs = this.physics.add.group(); //bombグループをまとめる
   this.physics.add.collider(bombs, staticGroup); //ボムと地面の衝突処理
-
+  this.physics.add.collider(bombs, staticGroup2); //ボムと地面の衝突処理
   //爆弾１個め
   bomb = bombs.create(16, 16, "bomb");
   bomb.setBounce(1);
@@ -115,12 +125,12 @@ function create() {
   bomb.allowGravity = true;
 
   //爆弾２個め
-  //bomb2もローカル変数で宣言していたため挙動がおかしくなったので、修正
-  bomb2 = bombs.create(500, 16, "bomb");
-  bomb2.setBounce(1);
-  bomb2.setCollideWorldBounds(true);
-  bomb2.setVelocity(Phaser.Math.Between(-200, 200), 20);
-  bomb2.allowGravity = true;
+  //bomb2もローカル変数で宣言していたためコインをすべて集めるとGameoverになる挙動がおかしくなったので、修正
+  bomb = bombs.create(500, 16, "bomb");
+  bomb.setBounce(1);
+  bomb.setCollideWorldBounds(true);
+  bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+  bomb.allowGravity = true;
 
   scoreText = this.add.text(16, 16, "Score: 0", {
     fontSize: "32px",
@@ -154,6 +164,8 @@ function create() {
   // playerとjewelGroupが重なったらhitJewelを呼ぶ
   this.physics.add.collider(player, jewelGroup, hitJewel, null, this);
 
+  this.physics.add.collider(player, staticGroup2, hitDeath, null, this);
+
   // ゲームオーバー表示を追加する
   gameOverText = this.add.text(D_WIDTH / 2, D_HEIGHT / 2, "", {
     fontSize: "64px",
@@ -184,13 +196,23 @@ function collectCoin(player, coin) {
   score += 10;
   scoreText.setText("Score: " + score);
   console.log(score);
-  if (score === 50) {
+  if (score === 60) {
     //   jewelGroup.setVisible(true);
-    let jewel = jewelGroup.create(450, 0, "jewel").setDisplaySize(30, 45); // ジュエル１
+    let jewel = jewelGroup.create(610, 0, "jewel").setDisplaySize(30, 50); // ジュエル１
     // jewel.setBounce(1);
     // jewel.setCollideWorldBounds(true);
     // jewel.setVelocity(Phaser.Math.Between(-200, 200), 20);
     jewel.allowGravity = false;
+  }
+}
+
+function hitDeath(player, block) {
+  console.log("deathbox");
+
+  if (deathCheck == 0) {
+    bomb = bombs.create(130, 250, "death").setDisplaySize(30, 30);
+    bomb = bombs.create(160, 250, "death").setDisplaySize(30, 30);
+    deathCheck = 1;
   }
 }
 
