@@ -1,5 +1,5 @@
-const D_WIDTH = 480;
-const D_HEIGHT = 320;
+const D_WIDTH = 640;
+const D_HEIGHT = 480;
 let player; //プレイヤーのスプライトを格納
 let bomb;
 let bomb2;
@@ -42,7 +42,7 @@ function preload() {
   this.load.image("ground", "./assets/ground.png");
   this.load.image("pillar", "./assets/pillar.png");
   this.load.image("post", "./assets/post.png");
-  this.load.image("sky", "./assets/sky.png");
+  this.load.image("sky", "./assets/back.gif");
   this.load.image("coin", "./assets/coin.png");
   this.load.image("jewel", "./assets/jewel.png");
   this.load.image("bomb", "assets/bomb.png");
@@ -55,7 +55,7 @@ function preload() {
 // ゲーム画面の初期化(キャラクターの登場等)
 function create() {
   console.log("create!!");
-  this.add.image(D_WIDTH / 2, D_HEIGHT / 2, "sky"); //背景画像
+  this.add.image(D_WIDTH / 2, D_HEIGHT / 2, "sky").setDisplaySize(640, 480); //背景画像
 
   player = this.physics.add.sprite(240, 80, "dude"); //プレイヤー
   player.setBounce(0.2); // 少しバウンドする
@@ -82,7 +82,8 @@ function create() {
   });
 
   let staticGroup = this.physics.add.staticGroup(); //動かないグループをまとめる
-  staticGroup.create(D_WIDTH / 2, D_HEIGHT - 32, "ground"); //地面を作る
+  staticGroup.create(D_WIDTH / 2 + 100, D_HEIGHT - 32, "ground"); //地面を作る
+  staticGroup.create(D_WIDTH / 2 - 100, D_HEIGHT - 32, "ground"); //地面を作る
   staticGroup.create(240, 240, "block"); // ブロック
   staticGroup.create(120, 120, "block"); // ブロック
   staticGroup.create(300, 100, "block"); // ブロック
